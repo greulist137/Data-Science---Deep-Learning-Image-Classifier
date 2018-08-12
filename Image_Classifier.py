@@ -9,8 +9,8 @@ Created on Sun Aug 12 10:51:46 2018
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
-%matplotlib inline
-%config InlineBackend.figure_format = 'retina'
+import matplotlib as plt
+#%config InlineBackend.figure_format = 'retina'
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision import datasets, transforms, models
@@ -189,25 +189,25 @@ def imshow(np_image, ax=None, title=None):
     return ax
 
     ''' Predict the class (or classes) of an image using a trained deep learning model.'''
-    def predict(image_path, model, topk=5): 
+def predict(image_path, model, topk=5): 
         '''
         processed = process_image(image_path)
         predict=model((torch.cuda.FloatTensor(processed)).unsqueeze_(0))
         probabilities=torch.exp(predict) 
         '''
-        model = model
-        model.eval()
-        model.to('cpu')
-        model.double()
-        img = process_image(image_path)
-        img = torch.from_numpy(img)
-        img = img.unsqueeze_(0)
-        with torch.no_grad():
-            output = model.forward(img)
-        pred = torch.exp(output)
-        top_five_probs=pred.topk(topk)[0] 
-        top_five_indices=pred.topk(topk)[1] 
-        return top_five_probs, top_five_indices
+    model = model
+    model.eval()
+    model.to('cpu')
+    model.double()
+    img = process_image(image_path)
+    img = torch.from_numpy(img)
+    img = img.unsqueeze_(0)
+    with torch.no_grad():
+        output = model.forward(img)
+    pred = torch.exp(output)
+    top_five_probs=pred.topk(topk)[0] 
+    top_five_indices=pred.topk(topk)[1] 
+    return top_five_probs, top_five_indices
 
 
 # TODO: Display an image along with the top 5 classes
