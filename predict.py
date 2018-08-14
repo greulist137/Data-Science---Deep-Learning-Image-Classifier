@@ -20,8 +20,6 @@ import torch
 import time
 
 import json
-
-# import the necessary packages
 import argparse
  
 # construct the argument parse and parse the arguments
@@ -49,7 +47,7 @@ def load_checkpoint(filepath):
 model = load_checkpoint('checkpoint.pth')
 print(model)
 
-# TODO: Process a PIL image for use in a PyTorch model
+# Process a PIL image for use in a PyTorch model
 def process_image(image):
     ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
         returns an Numpy array
@@ -102,14 +100,10 @@ def predict(image_path, model, topk=5):
     return top_five_probs, top_five_indices
 
 
-# TODO: Display an image along with the top 5 classes
-#print(predict(train_dir+"/1/image_06735.jpg",model))
-
-#predictions, labels = predict("flowers/train/1/image_06735.jpg",model)
+# Display an image along with the top 5 classes
 predictions, labels = predict(args["image"],model)
 
 print('predictions')
-#predictions =predictions.to('cpu')
 predictions = predictions.detach().numpy()
 predictions = predictions
 print(predictions[0])

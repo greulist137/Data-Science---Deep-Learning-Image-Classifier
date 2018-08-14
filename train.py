@@ -7,7 +7,6 @@ Created on Sun Aug 12 12:17:00 2018
 
 # Imports here
 
-
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
@@ -48,11 +47,11 @@ print(args["learning"])
 print('epochs')
 print(args["epochs"])
 
-#data_dir = 'flowers'
 data_dir = args["directory"]
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
 test_dir = data_dir + '/test'
+
 # Define your transforms for the training, validation, and testing sets
 train_transforms = transforms.Compose([transforms.RandomRotation(30),
                                        transforms.RandomResizedCrop(224),
@@ -77,7 +76,7 @@ testloader = torch.utils.data.DataLoader(test_data, batch_size=32)
 dataiter = iter(trainloader)
 images, labels = dataiter.next()    
     
-# TODO: Build and train your network
+# Build and train your network
 model = models.vgg16(pretrained=True)
 model
 
@@ -103,7 +102,6 @@ model.classifier = classifier
 
 # Train a model with a pre-trained network
 criterion = nn.NLLLoss()
-#optimizer = optim.Adam(model.classifier.parameters(), 0.0005)
 learning = float(args["learning"])
 optimizer = optim.Adam(model.classifier.parameters(), learning)
 
@@ -160,7 +158,7 @@ epochs = int(args["epochs"])
 do_deep_learning(model, trainloader, epochs, 40, criterion, optimizer, 'gpu')
 check_accuracy_on_test(validationloader)
 
-# TODO: Do validation on the test set
+# Do validation on the test set
 check_accuracy_on_test(testloader)
 
 def save_checkpoint():
