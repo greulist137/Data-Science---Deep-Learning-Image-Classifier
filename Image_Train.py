@@ -42,7 +42,8 @@ print(args["learning"])
 print('epochs')
 print(args["epochs"])
 
-data_dir = 'flowers'
+#data_dir = 'flowers'
+data_dir = args["directory"]
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
 test_dir = data_dir + '/test'
@@ -96,7 +97,9 @@ model.classifier = classifier
 
 # Train a model with a pre-trained network
 criterion = nn.NLLLoss()
-optimizer = optim.Adam(model.classifier.parameters(), 0.0005)
+#optimizer = optim.Adam(model.classifier.parameters(), 0.0005)
+learning = float(args["learning"])
+optimizer = optim.Adam(model.classifier.parameters(), learning)
 
 
 # Putting the above into functions, so they can be used later
@@ -146,7 +149,9 @@ def check_accuracy_on_test(testloader):
 
     print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     
-do_deep_learning(model, trainloader, 3, 40, criterion, optimizer, 'gpu')
+
+epochs = int(args["epochs"])
+do_deep_learning(model, trainloader, epochs, 40, criterion, optimizer, 'gpu')
 check_accuracy_on_test(validationloader)
 
 # TODO: Do validation on the test set
