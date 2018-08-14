@@ -26,15 +26,21 @@ import argparse
  
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-n", "--name", required=True,
-	help="name of the user")
-ap.add_argument("-t", "--test", required=True,
-	help="name of the user")
+ap.add_argument("-d", "--directory", required=True,
+	help="Root Directory of images")
+ap.add_argument("-l", "--learning", required=True,
+	help="Learning Rate")
+ap.add_argument("-e", "--epochs", required=True,
+	help="Number of epochs")
 args = vars(ap.parse_args())
  
 # display a friendly message to the user
-print("Hi there {}, it's nice to meet you!".format(args["name"]))
-print("Hi there {}, it's nice to meet you!".format(args["test"]))
+print('root')
+print(args["directory"])
+print('learning rate')
+print(args["learning"])
+print('epochs')
+print(args["epochs"])
 
 data_dir = 'flowers'
 train_dir = data_dir + '/train'
