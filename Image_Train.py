@@ -6,6 +6,8 @@ Created on Sun Aug 12 12:17:00 2018
 """
 
 # Imports here
+
+
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
@@ -19,13 +21,25 @@ import numpy as np
 import torch
 import time
 
-#Loading Dataset
+# import the necessary packages
+import argparse
+ 
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-n", "--name", required=True,
+	help="name of the user")
+ap.add_argument("-t", "--test", required=True,
+	help="name of the user")
+args = vars(ap.parse_args())
+ 
+# display a friendly message to the user
+print("Hi there {}, it's nice to meet you!".format(args["name"]))
+print("Hi there {}, it's nice to meet you!".format(args["test"]))
 
 data_dir = 'flowers'
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
 test_dir = data_dir + '/test'
-
 # Define your transforms for the training, validation, and testing sets
 train_transforms = transforms.Compose([transforms.RandomRotation(30),
                                        transforms.RandomResizedCrop(224),
@@ -33,30 +47,22 @@ train_transforms = transforms.Compose([transforms.RandomRotation(30),
                                        transforms.ToTensor(),
                                        transforms.Normalize([0.485, 0.456, 0.406], 
                                                             [0.229, 0.224, 0.225])])
-
 test_val_transforms = transforms.Compose([transforms.Resize(256),
                                       transforms.CenterCrop(224),
                                       transforms.ToTensor(),
                                       transforms.Normalize([0.485, 0.456, 0.406], 
                                                            [0.229, 0.224, 0.225])])
-
 # Load the datasets with ImageFolder
 train_data = datasets.ImageFolder(train_dir, transform=train_transforms)
 val_data = datasets.ImageFolder(valid_dir, transform=test_val_transforms)
 test_data = datasets.ImageFolder(test_dir, transform=test_val_transforms)
-
 trainloader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
 validationloader = torch.utils.data.DataLoader(val_data, batch_size=32)
 testloader = torch.utils.data.DataLoader(test_data, batch_size=32)
 
+
 dataiter = iter(trainloader)
-images, labels = dataiter.next()
-
-import json
-
-with open('cat_to_name.json', 'r') as f:
-    cat_to_name = json.load(f)
-    
+images, labels = dataiter.next()    
     
 # TODO: Build and train your network
 model = models.vgg16(pretrained=True)
@@ -84,7 +90,8 @@ model.classifier = classifier
 
 # Train a model with a pre-trained network
 criterion = nn.NLLLoss()
-optimizer = optim.Adam(model.classifier.parameters(), lr=0.0005)
+optimizer = optim.Adam(model.classifier.parameters(), 0.0005)
+
 
 # Putting the above into functions, so they can be used later
 
@@ -152,90 +159,3 @@ def load_checkpoint(filepath):
 model = load_checkpoint('checkpoint.pth')
 print(model)
 
-# TODO: Process a PIL image for use in a PyTorch model
-def process_image(image):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
-    '''
-    pil_image = Image.open(image)
-    pil_image.show()
-    pil_image = pil_image.resize((256,256))
-    pil_image = pil_image.crop((0,0,224,224))
-    np_image = np.array(pil_image)    
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    np_image=(np_image-mean)/std       
-    return np_image.transpose()
-
-def imshow(np_image, ax=None, title=None):
-    """Imshow for Tensor."""
-    if ax is None:
-        fig, ax = plt.subplots()
-    
-    # PyTorch tensors assume the color channel is the first dimension
-    # but matplotlib assumes is the third dimension
-    image = np.transpose(np_image,(2,0,1))
-    
-    # Undo preprocessing
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    image = std * image + mean
-    
-    # Image needs to be clipped between 0 and 1 or it looks like noise when displayed
-    image = np.clip(image, 0, 1)
-    
-    ax.imshow(image)
-    
-    return ax
-
-    ''' Predict the class (or classes) of an image using a trained deep learning model.'''
-def predict(image_path, model, topk=5):
-    model = model
-    model.eval()
-    model.to('cpu')
-    model.double()
-    img = process_image(image_path)
-    img = torch.from_numpy(img)
-    img = img.unsqueeze_(0)
-    with torch.no_grad():
-        output = model.forward(img)
-    pred = torch.exp(output)
-    top_five_probs=pred.topk(topk)[0] 
-    top_five_indices=pred.topk(topk)[1] 
-    return top_five_probs, top_five_indices
-
-
-# TODO: Display an image along with the top 5 classes
-#print(predict(train_dir+"/1/image_06735.jpg",model))
-
-predictions, labels = predict(train_dir+"/1/image_06735.jpg",model)
-print('predictions')
-#predictions =predictions.to('cpu')
-predictions = predictions.detach().numpy()
-predictions = predictions
-print(predictions[0])
-print('labels')
-labels = labels.to('cpu')
-labels = labels.numpy()
-print(labels[0])
-
-
-def get_labels(labels):
-    flower_names = []
-    for x in labels[0]:
-        print(x)
-        x = str(x)
-        if(x in cat_to_name):
-            print(cat_to_name[x])
-            flower_names.append(cat_to_name[x])
-    return flower_names
-        
-flower_labels = get_labels(labels)
-
-
-def show_analysis():
-    plt.bar(flower_labels, predictions[0])
-    plt.xticks(flower_labels)
-    plt.show()
-    
-show_analysis()
