@@ -21,6 +21,23 @@ import time
 
 import json
 
+# import the necessary packages
+import argparse
+ 
+# construct the argument parse and parse the arguments
+'''
+Default values used for testing
+directory: "flowers/train/1/image_06735.jpg"
+'''
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--image", required=True,
+	help="Root Directory of image")
+args = vars(ap.parse_args())
+ 
+# display a friendly message to the user
+print('Image')
+print(args["image"])
+
 with open('cat_to_name.json', 'r') as f:
     cat_to_name = json.load(f)
 
@@ -88,7 +105,9 @@ def predict(image_path, model, topk=5):
 # TODO: Display an image along with the top 5 classes
 #print(predict(train_dir+"/1/image_06735.jpg",model))
 
-predictions, labels = predict("flowers/train/1/image_06735.jpg",model)
+#predictions, labels = predict("flowers/train/1/image_06735.jpg",model)
+predictions, labels = predict(args["image"],model)
+
 print('predictions')
 #predictions =predictions.to('cpu')
 predictions = predictions.detach().numpy()

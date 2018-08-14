@@ -25,6 +25,12 @@ import time
 import argparse
  
 # construct the argument parse and parse the arguments
+'''
+Default values used for testing
+directory: root
+LEarning Rate: 0.0005
+epochs: 3
+'''
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--directory", required=True,
 	help="Root Directory of images")
