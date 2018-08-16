@@ -15,13 +15,13 @@ import matplotlib as plt
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision import datasets, transforms, models
+from collections import OrderedDict
 
 import numpy as np
 import torch
 import time
-
-# import the necessary packages
 import argparse
+
  
 # construct the argument parse and parse the arguments
 '''
@@ -84,7 +84,7 @@ model
 for param in model.parameters():
     param.requires_grad = False
 
-from collections import OrderedDict
+
 classifier = nn.Sequential(OrderedDict([
                           ('fc1', nn.Linear(25088, 12544)),
                           ('relu1', nn.ReLU()),
