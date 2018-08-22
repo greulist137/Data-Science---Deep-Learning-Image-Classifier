@@ -27,7 +27,7 @@ import argparse
 Default values used for testing
 directory: "flowers/train/1/image_06735.jpg"
 '''
-'''
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
 	help="Root Directory of image")
@@ -36,9 +36,7 @@ args = vars(ap.parse_args())
 # display a friendly message to the user
 print('Image')
 print(args["image"])
-'''
 
-user-image-path = input('Please enter root directory for images (default: flowers/train/1/image_06735.jpg)')
 
 with open('cat_to_name.json', 'r') as f:
     cat_to_name = json.load(f)
@@ -112,7 +110,7 @@ def predict(image_path, model, topk=5):
     return top_five_probs, flower_names
 
 # Display an image along with the top 5 classes
-predictions, classes = predict(user-image-path,model)
+predictions, classes = predict(args['image'],model)
 
 def show_analysis():
     plt.bar(classes, predictions[0])

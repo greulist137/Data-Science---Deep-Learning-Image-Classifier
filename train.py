@@ -30,7 +30,7 @@ directory: root
 Learning Rate: 0.0005
 epochs: 3
 '''
-'''
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-d", "--directory", required=True,
 	help="Root Directory of images")
@@ -39,15 +39,8 @@ ap.add_argument("-l", "--learning", required=True,
 ap.add_argument("-e", "--epochs", required=True,
 	help="Number of epochs")
 args = vars(ap.parse_args())
- '''
-# display a friendly message to the user
-user-image-path = input('Please enter root directory for images (default: flowers)')
-user-epochs = input('Please enter number of epochs (default: 10)')
-user-epochs = int(user-epochs)
-user-learning-rate = input('Please enter the learning rate (Default: 0.0005)')
-user-learning-rate = float(user-learning-rate)
 
-data_dir = user-image-path
+data_dir = args['directory']
 train_dir = data_dir + '/train'
 valid_dir = data_dir + '/valid'
 test_dir = data_dir + '/test'
@@ -98,7 +91,7 @@ model.classifier = classifier
 
 # Train a model with a pre-trained network
 criterion = nn.NLLLoss()
-learning = user-learning-rate
+learning = float(args['learning'])
 optimizer = optim.Adam(model.classifier.parameters(), learning)
 
 
@@ -153,8 +146,8 @@ def check_accuracy_on_test(testloader):
     print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     
 
-epochs = user-epochs
-do_deep_learning(model, trainloader, validationloader, 10, 10, criterion, optimizer, 'gpu')
+epochs = int(args['epochs'])
+do_deep_learning(model, trainloader, validationloader, epochs, 10, criterion, optimizer, 'gpu')
 
 # Do validation on the test set
 check_accuracy_on_test(testloader)
