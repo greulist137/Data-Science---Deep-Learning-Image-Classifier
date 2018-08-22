@@ -29,6 +29,7 @@ Default values used for testing
 directory: root
 Learning Rate: 0.0005
 epochs: 3
+model (VGG16 or resnet18)
 '''
 
 ap = argparse.ArgumentParser()
@@ -38,6 +39,8 @@ ap.add_argument("-l", "--learning", required=True,
 	help="Learning Rate")
 ap.add_argument("-e", "--epochs", required=True,
 	help="Number of epochs")
+ap.add_argument("-m", "--model", required=True,
+	help="Type of model")
 args = vars(ap.parse_args())
 
 data_dir = args['directory']
@@ -70,8 +73,18 @@ dataiter = iter(trainloader)
 images, labels = dataiter.next()    
     
 # Build and train your network
-model = models.vgg16(pretrained=True)
-model
+if(args['model'] == 'vgg16'):
+    model = models.vgg16(pretrained=True)
+if(args['model'] == 'resnet18'):
+    model = models.resnet18(pretrained=True)
+###################################REMOVE THE COMMENT
+#model
+
+############################################################DELETE
+print('test')
+test = model.classifier[0].in_features
+
+print(test)
 
 # Freeze parameters so we don't backprop through them
 for param in model.parameters():

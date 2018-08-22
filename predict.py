@@ -49,6 +49,9 @@ def load_checkpoint(filepath):
 model = load_checkpoint('checkpoint.pth')
 print(model)
 
+
+
+
 # Process a PIL image for use in a PyTorch model
 def process_image(image):
     ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
