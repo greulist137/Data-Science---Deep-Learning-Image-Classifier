@@ -27,6 +27,7 @@ import argparse
 Default values used for testing
 directory: "flowers/train/1/image_06735.jpg"
 '''
+'''
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
 	help="Root Directory of image")
@@ -35,6 +36,9 @@ args = vars(ap.parse_args())
 # display a friendly message to the user
 print('Image')
 print(args["image"])
+'''
+
+user-image-path = input('Please enter root directory for images (default: flowers/train/1/image_06735.jpg)')
 
 with open('cat_to_name.json', 'r') as f:
     cat_to_name = json.load(f)
@@ -97,38 +101,21 @@ def predict(image_path, model, topk=5):
     pred = torch.exp(output)
     top_five_probs=pred.topk(topk)[0] 
     top_five_indices=pred.topk(topk)[1] 
-    return top_five_probs, top_five_indices
-
-
-# Display an image along with the top 5 classes
-predictions, labels = predict(args["image"],model)
-
-print('predictions')
-predictions = predictions.detach().numpy()
-predictions = predictions
-print(predictions[0])
-print('labels')
-labels = labels.to('cpu')
-labels = labels.numpy()
-print(labels[0])
-
-
-def get_labels(labels):
+    top_five_indices = top_five_indices.numpy()        
     flower_names = []
-    for x in labels[0]:
+    for x in top_five_indices[0]:
         print(x)
         x = str(x)
         if(x in cat_to_name):
             print(cat_to_name[x])
             flower_names.append(cat_to_name[x])
-    return flower_names
-        
-flower_labels = get_labels(labels)
+    return top_five_probs, flower_names
 
+# Display an image along with the top 5 classes
+predictions, classes = predict(user-image-path,model)
 
 def show_analysis():
-    plt.bar(flower_labels, predictions[0])
-    plt.xticks(flower_labels)
+    plt.bar(classes, predictions[0])
     plt.show()
     
 show_analysis()
