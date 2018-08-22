@@ -41,10 +41,10 @@ ap.add_argument("-e", "--epochs", required=True,
 args = vars(ap.parse_args())
  '''
 # display a friendly message to the user
-user-image-path = input('Please enter root directory for images')
-user-epochs = input('Please enter number of epochs')
+user-image-path = input('Please enter root directory for images (default: flowers)')
+user-epochs = input('Please enter number of epochs (default: 10)')
 user-epochs = int(user-epochs)
-user-learning-rate = input('Please enter the learning rate')
+user-learning-rate = input('Please enter the learning rate (Default: 0.0005)')
 user-learning-rate = float(user-learning-rate)
 
 data_dir = user-image-path
@@ -84,18 +84,14 @@ model
 for param in model.parameters():
     param.requires_grad = False
 
-
 classifier = nn.Sequential(OrderedDict([
-                          ('fc1', nn.Linear(25088, 12544)),
+                          ('fc1', nn.Linear(25088, 4096)),
                           ('relu1', nn.ReLU()),
                           ('drop1', nn.Dropout(0.5)),
-                          ('fc2', nn.Linear(12544, 6272)),
+                          ('fc2', nn.Linear(4096, 1000)),
                           ('relu2', nn.ReLU()),
-                          ('drop2', nn.Dropout(0.5)),
-                          ('fc3', nn.Linear(6272, 3136)),  
-                          ('relu3', nn.ReLU()),
-                          ('drop3', nn.Dropout(0.5)), 
-                          ('fc4', nn.Linear(3136, 102)),  
+                          ('drop2', nn.Dropout(0.5)), 
+                          ('fc4', nn.Linear(1000, 102)),  
                           ('output', nn.LogSoftmax(dim=1))]))
     
 model.classifier = classifier
@@ -107,8 +103,7 @@ optimizer = optim.Adam(model.classifier.parameters(), learning)
 
 
 # Putting the above into functions, so they can be used later
-
-def do_deep_learning(model, trainloader, epochs, print_every, criterion, optimizer, device='cpu'):
+def do_deep_learning(model, trainloader, validationloader, epochs, print_every, criterion, optimizer, device='cpu'):
     epochs = epochs
     print_every = print_every
     steps = 0
@@ -117,8 +112,12 @@ def do_deep_learning(model, trainloader, epochs, print_every, criterion, optimiz
     model.to('cuda')
 
     for e in range(epochs):
+        if e % 2 == 0:
+            loader = validationloader
+        else:
+            loader = trainloader
         running_loss = 0
-        for ii, (inputs, labels) in enumerate(trainloader):
+        for ii, (inputs, labels) in enumerate(loader):
             steps += 1
 
             inputs, labels = inputs.to('cuda'), labels.to('cuda')
@@ -155,21 +154,32 @@ def check_accuracy_on_test(testloader):
     
 
 epochs = user-epochs
-do_deep_learning(model, trainloader, epochs, 40, criterion, optimizer, 'gpu')
-check_accuracy_on_test(validationloader)
+do_deep_learning(model, trainloader, validationloader, 10, 10, criterion, optimizer, 'gpu')
 
 # Do validation on the test set
 check_accuracy_on_test(testloader)
 
 def save_checkpoint():
-    torch.save(model, 'checkpoint.pth')
+    model.class_to_idx = train_data.class_to_idx
+    checkpoint = {
+              'state_dict': model.state_dict(),
+              'image_datasets' : model.class_to_idx,
+              'epochs': epochs,
+              'optimizer': optimizer.state_dict(),
+             }
+    torch.save(checkpoint, 'checkpoint.pth')
     
 save_checkpoint()
 
 # Write a function that loads a checkpoint and rebuilds the model
 def load_checkpoint(filepath):
-    model = torch.load('checkpoint.pth')
+    checkpoint = torch.load(filepath)
+    epochs = checkpoint['epochs']
+    model.load_state_dict(checkpoint['state_dict'])
+    model.class_to_idx = checkpoint['image_datasets']
+    optimizer.load_state_dict(checkpoint['optimizer'])
     return model
+
 
 model = load_checkpoint('checkpoint.pth')
 print(model)
