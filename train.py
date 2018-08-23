@@ -30,6 +30,7 @@ directory: root
 Learning Rate: 0.0005
 epochs: 3
 model (VGG16 or resnet18)
+Hidden layer: 3
 '''
 
 ap = argparse.ArgumentParser()
@@ -41,6 +42,8 @@ ap.add_argument("-e", "--epochs", required=True,
 	help="Number of epochs")
 ap.add_argument("-m", "--model", required=True,
 	help="Type of model")
+ap.add_argument("-j", "--hidden", required=True,
+	help="number of hidden layers")
 args = vars(ap.parse_args())
 
 data_dir = args['directory']
@@ -77,18 +80,11 @@ if(args['model'] == 'vgg16'):
     model = models.vgg16(pretrained=True)
 if(args['model'] == 'resnet18'):
     model = models.resnet18(pretrained=True)
-###################################REMOVE THE COMMENT
-#model
-
-############################################################DELETE
-print('test')
-test = model.classifier[0].in_features
-
-print(test)
 
 # Freeze parameters so we don't backprop through them
 for param in model.parameters():
     param.requires_grad = False
+
 
 classifier = nn.Sequential(OrderedDict([
                           ('fc1', nn.Linear(25088, 4096)),
@@ -106,7 +102,6 @@ model.classifier = classifier
 criterion = nn.NLLLoss()
 learning = float(args['learning'])
 optimizer = optim.Adam(model.classifier.parameters(), learning)
-
 
 # Putting the above into functions, so they can be used later
 def do_deep_learning(model, trainloader, validationloader, epochs, print_every, criterion, optimizer, device='cpu'):
