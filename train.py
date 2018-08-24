@@ -30,6 +30,7 @@ directory: root
 Learning Rate: 0.0005
 epochs: 3
 model (VGG16 or resnet18)
+GPU
 Hidden layer: 3
 '''
 
@@ -44,6 +45,8 @@ ap.add_argument("-m", "--model", required=True,
 	help="Type of model")
 ap.add_argument("-j", "--hidden", required=True,
 	help="number of hidden layers")
+ap.add_argument("-p", "--processor", required=True,
+	help="use GPU or CPU")
 args = vars(ap.parse_args())
 
 data_dir = args['directory']
