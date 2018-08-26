@@ -37,24 +37,20 @@ ap.add_argument("-j", "--json", required=True,
 	help="json file")
 ap.add_argument("-c", "--checkpoint", required=True,
 	help="Checkpoint file")
+ap.add_argument("-p", "--processor", required=True,
+	help="use GPU or CPU")
 args = vars(ap.parse_args())
- 
-# display a friendly message to the user
-
-with open(args['json'], 'r') as f:
-    mapping_list = json.load(f)
 
 # Write a function that loads a checkpoint and rebuilds the model
 def load_checkpoint(filepath):
-    checkpoint = torch.load(filepath)
-    epochs = checkpoint['epochs']
-    model.load_state_dict(checkpoint['state_dict'])
-    model.class_to_idx = checkpoint['image_datasets']
-    optimizer.load_state_dict(checkpoint['optimizer'])
+    model = torch.load(filepath)
     return model
 
 model = load_checkpoint(args['checkpoint'])
 print(model)
+
+with open(args['json'], 'r') as f:
+    mapping_list = json.load(f)
 
 # Process a PIL image for use in a PyTorch model
 def process_image(image):
@@ -101,7 +97,7 @@ def imshow(np_image, ax=None, title=None):
 def predict(image_path, model, topk=5):
     model = model
     model.eval()
-    model.to('cpu')
+    model.to(args['processor'])
     model.double()
     img = process_image(image_path)
     img = torch.from_numpy(img)

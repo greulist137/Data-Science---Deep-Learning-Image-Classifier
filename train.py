@@ -81,8 +81,11 @@ images, labels = dataiter.next()
 # Build and train your network
 if(args['model'] == 'vgg16'):
     model = models.vgg16(pretrained=True)
+    model_inputs = model.classifier[0].in_features
 if(args['model'] == 'resnet18'):
     model = models.resnet18(pretrained=True)
+    model_inputs = model.classifier[0].in_features
+
 
 # Freeze parameters so we don't backprop through them
 for param in model.parameters():
@@ -90,7 +93,7 @@ for param in model.parameters():
 
 
 classifier = nn.Sequential(OrderedDict([
-                          ('fc1', nn.Linear(25088, 4096)),
+                          ('fc1', nn.Linear(model_inputs, 4096)),
                           ('relu1', nn.ReLU()),
                           ('drop1', nn.Dropout(0.5)),
                           ('fc2', nn.Linear(4096, 1000)),
