@@ -121,6 +121,8 @@ def do_deep_learning(model, trainloader, validationloader, epochs, print_every, 
         else:
             loader = trainloader
         running_loss = 0
+        accuracy = 0
+        val_loss = 0
         for ii, (inputs, labels) in enumerate(loader):
             steps += 1
 
@@ -130,15 +132,20 @@ def do_deep_learning(model, trainloader, validationloader, epochs, print_every, 
 
             # Forward and backward passes
             outputs = model.forward(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
+            val_loss = criterion(outputs, labels)
+            val_loss.backward()
             optimizer.step()
+            ps = torch.exp(outputs).data
+            equality = (labels.data == ps.max(1)[1])
+            accuracy += equality.type_as(torch.FloatTensor()).mean()
 
-            running_loss += loss.item()
+            running_loss += val_loss.item()
 
             if steps % print_every == 0:
-                print("Epoch: {}/{}... ".format(e+1, epochs),
-                      "Loss: {:.4f}".format(running_loss/print_every))
+                print("Epoch: {}/{}.. ".format(e+1, epochs),
+                      "Training Loss: {:.3f}.. ".format(running_loss/print_every),
+                      "Validation Loss: {:.3f}.. ".format(val_loss/len(validationloader)),
+                      "Validation Accuracy: {:.3f}".format(accuracy/len(validationloader)))
                 running_loss = 0
     
 def check_accuracy_on_test(testloader):   
@@ -163,7 +170,7 @@ do_deep_learning(model, trainloader, validationloader, epochs, 10, criterion, op
 # Do validation on the test set
 check_accuracy_on_test(testloader)
 
-def save_checkpoint():
+def save_checkpoint(model):
     model.class_to_idx = train_data.class_to_idx
     checkpoint = {
               'state_dict': model.state_dict(),
@@ -173,7 +180,7 @@ def save_checkpoint():
              }
     torch.save(checkpoint, 'checkpoint.pth')
     
-save_checkpoint()
+save_checkpoint(model)
 
 # Write a function that loads a checkpoint and rebuilds the model
 def load_checkpoint(filepath):

@@ -26,11 +26,17 @@ import argparse
 '''
 Default values used for testing
 directory: "flowers/train/1/image_06735.jpg"
+json: cat_to_name.json
+checkpoint: checkpoint.pth
 '''
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
 	help="Root Directory of image")
+ap.add_argument("-j", "--json", required=True,
+	help="json file")
+ap.add_argument("-c", "--checkpoint", required=True,
+	help="Checkpoint file")
 args = vars(ap.parse_args())
  
 # display a friendly message to the user
@@ -38,29 +44,35 @@ print('Image')
 print(args["image"])
 
 
-with open('cat_to_name.json', 'r') as f:
-    cat_to_name = json.load(f)
+with open(args['json'], 'r') as f:
+    mapping_list = json.load(f)
 
 # Write a function that loads a checkpoint and rebuilds the model
 def load_checkpoint(filepath):
-    model = torch.load('checkpoint.pth')
+    checkpoint = torch.load(filepath)
+    epochs = checkpoint['epochs']
+    model.load_state_dict(checkpoint['state_dict'])
+    model.class_to_idx = checkpoint['image_datasets']
+    optimizer.load_state_dict(checkpoint['optimizer'])
     return model
 
-model = load_checkpoint('checkpoint.pth')
+model = load_checkpoint(args['checkpoint'])
 print(model)
-
-
-
 
 # Process a PIL image for use in a PyTorch model
 def process_image(image):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
-    '''
     pil_image = Image.open(image)
     pil_image.show()
     pil_image = pil_image.resize((256,256))
-    pil_image = pil_image.crop((0,0,224,224))
+    size = 256, 256
+    pil_image.thumbnail(size, Image.ANTIALIAS)
+    pil_image = pil_image.crop((
+        size[0]//2 - 112,
+        size[1]//2 - 112,
+        size[0]//2 + 112,
+        size[1]//2 + 112)
+    )
+    
     np_image = np.array(pil_image)    
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
@@ -102,21 +114,26 @@ def predict(image_path, model, topk=5):
     pred = torch.exp(output)
     top_five_probs=pred.topk(topk)[0] 
     top_five_indices=pred.topk(topk)[1] 
-    top_five_indices = top_five_indices.numpy()        
-    flower_names = []
-    for x in top_five_indices[0]:
-        print(x)
-        x = str(x)
-        if(x in cat_to_name):
-            print(cat_to_name[x])
-            flower_names.append(cat_to_name[x])
-    return top_five_probs, flower_names
+    top_five_classes = top_five_indices.numpy()
+    return top_five_probs, top_five_classes
 
 # Display an image along with the top 5 classes
 predictions, classes = predict(args['image'],model)
 
+def convert_to_names(classes, mapping_list):
+    names = []
+    for x in classes[0]:
+        print(x)
+        x = str(x)
+        if(x in mapping_list):
+            print(mapping_list[x])
+            names.append(mapping_list[x])
+    return names
+
+names = convert_to_names(classes, mapping_list)
+
 def show_analysis():
-    plt.bar(classes, predictions[0])
+    plt.bar(names, predictions[0])
     plt.show()
     
 show_analysis()
