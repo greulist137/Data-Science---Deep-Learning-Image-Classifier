@@ -30,7 +30,7 @@ directory: root
 Learning Rate: 0.0005
 epochs: 3
 model (VGG16 or resnet18)
-GPU
+CUDA
 Hidden layer: 3
 '''
 
@@ -113,7 +113,7 @@ def do_deep_learning(model, trainloader, validationloader, epochs, print_every, 
     steps = 0
 
     # change to cuda
-    model.to('cuda')
+    model.to(args['processor'])
 
     for e in range(epochs):
         if e % 2 == 0:
@@ -126,7 +126,7 @@ def do_deep_learning(model, trainloader, validationloader, epochs, print_every, 
         for ii, (inputs, labels) in enumerate(loader):
             steps += 1
 
-            inputs, labels = inputs.to('cuda'), labels.to('cuda')
+            inputs, labels = inputs.to(args['processor']), labels.to(args['processor'])
 
             optimizer.zero_grad()
 
@@ -155,7 +155,7 @@ def check_accuracy_on_test(testloader):
     with torch.no_grad():
         for data in testloader:
             images, labels = data
-            images, labels = images.to('cuda'), labels.to('cuda')
+            images, labels = images.to(args['processor']), labels.to(args['processor'])
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
@@ -165,7 +165,7 @@ def check_accuracy_on_test(testloader):
     
 
 epochs = int(args['epochs'])
-do_deep_learning(model, trainloader, validationloader, epochs, 10, criterion, optimizer, 'gpu')
+do_deep_learning(model, trainloader, validationloader, epochs, 10, criterion, optimizer, args['processor'])
 
 # Do validation on the test set
 check_accuracy_on_test(testloader)
@@ -181,17 +181,4 @@ def save_checkpoint(model):
     torch.save(checkpoint, 'checkpoint.pth')
     
 save_checkpoint(model)
-
-# Write a function that loads a checkpoint and rebuilds the model
-def load_checkpoint(filepath):
-    checkpoint = torch.load(filepath)
-    epochs = checkpoint['epochs']
-    model.load_state_dict(checkpoint['state_dict'])
-    model.class_to_idx = checkpoint['image_datasets']
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    return model
-
-
-model = load_checkpoint('checkpoint.pth')
-print(model)
 

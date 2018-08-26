@@ -40,9 +40,6 @@ ap.add_argument("-c", "--checkpoint", required=True,
 args = vars(ap.parse_args())
  
 # display a friendly message to the user
-print('Image')
-print(args["image"])
-
 
 with open(args['json'], 'r') as f:
     mapping_list = json.load(f)
