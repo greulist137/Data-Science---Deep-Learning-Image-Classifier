@@ -1,0 +1,4 @@
+python train.py --directory flowers --learning 0.0005 --epochs 3 --model vgg16 --hidden 2  --processor cuda
+
+
+python predict.py --image flowers/train/1/image_06735.jpg --json cat_to_name.json --checkpoint checkpoint.pth --processor cuda
