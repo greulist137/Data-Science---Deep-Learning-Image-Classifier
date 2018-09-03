@@ -80,10 +80,10 @@ images, labels = dataiter.next()
     
 # Build and train your network
 if(args['model'] == 'vgg16'):
-    model = models.vgg16(pretrained=True)
+    model = getattr(models, 'vgg16')(pretrained=True)
     model_inputs = model.classifier[0].in_features
 if(args['model'] == 'resnet18'):
-    model = models.resnet18(pretrained=True)
+    model = getattr(models, 'resnet18')(pretrained=True)
     model_inputs = model.classifier[0].in_features
 
 
@@ -108,12 +108,12 @@ model.classifier = classifier
 criterion = nn.NLLLoss()
 learning = float(args['learning'])
 optimizer = optim.Adam(model.classifier.parameters(), learning)
-
-# Putting the above into functions, so they can be used later
+                
 def do_deep_learning(model, trainloader, validationloader, epochs, print_every, criterion, optimizer, device='cpu'):
     epochs = epochs
     print_every = print_every
     steps = 0
+    running_loss = 0
 
     # change to cuda
     model.to(args['processor'])
@@ -121,35 +121,41 @@ def do_deep_learning(model, trainloader, validationloader, epochs, print_every, 
     for e in range(epochs):
         if e % 2 == 0:
             loader = validationloader
+            model.eval()
+            accuracy = 0
+            val_loss = 0
+            for ii, (inputs, labels) in enumerate(loader):
+                steps += 1
+                inputs, labels = inputs.to(args['processor']), labels.to(args['processor'])
+                outputs = model.forward(inputs)
+                val_loss = criterion(outputs, labels)
+                ps = torch.exp(outputs).data
+                equality = (labels.data == ps.max(1)[1])
+                accuracy += equality.type_as(torch.FloatTensor()).mean()
+                if steps % print_every == 0:
+                    print("Epoch: {}/{}.. ".format(e+1, epochs),
+                          "Training Loss: {:.3f}.. ".format(running_loss/print_every),
+                          "Validation Loss: {:.3f}.. ".format(val_loss/len(validationloader)),
+                          "Validation Accuracy: {:.3f}".format(accuracy/len(validationloader)))
+
         else:
+            model.train()
             loader = trainloader
-        running_loss = 0
-        accuracy = 0
-        val_loss = 0
-        for ii, (inputs, labels) in enumerate(loader):
-            steps += 1
-
-            inputs, labels = inputs.to(args['processor']), labels.to(args['processor'])
-
-            optimizer.zero_grad()
-
-            # Forward and backward passes
-            outputs = model.forward(inputs)
-            val_loss = criterion(outputs, labels)
-            val_loss.backward()
-            optimizer.step()
-            ps = torch.exp(outputs).data
-            equality = (labels.data == ps.max(1)[1])
-            accuracy += equality.type_as(torch.FloatTensor()).mean()
-
-            running_loss += val_loss.item()
-
-            if steps % print_every == 0:
-                print("Epoch: {}/{}.. ".format(e+1, epochs),
-                      "Training Loss: {:.3f}.. ".format(running_loss/print_every),
-                      "Validation Loss: {:.3f}.. ".format(val_loss/len(validationloader)),
-                      "Validation Accuracy: {:.3f}".format(accuracy/len(validationloader)))
-                running_loss = 0
+            for ii, (inputs, labels) in enumerate(loader):
+                steps += 1
+                inputs, labels = inputs.to(args['processor']), labels.to(args['processor'])
+                optimizer.zero_grad()
+                outputs = model.forward(inputs)
+                val_loss = criterion(outputs, labels)
+                val_loss.backward()
+                optimizer.step()
+                running_loss += val_loss.item()
+                if steps % print_every == 0:
+                    print("Epoch: {}/{}.. ".format(e+1, epochs),
+                          "Training Loss: {:.3f}.. ".format(running_loss/print_every),
+                          "Validation Loss: {:.3f}.. ".format(val_loss/len(validationloader)),
+                          "Validation Accuracy: {:.3f}".format(accuracy/len(validationloader)))
+                    running_loss = 0
     
 def check_accuracy_on_test(testloader):   
     correct = 0
@@ -178,8 +184,10 @@ def save_checkpoint(model):
     checkpoint = {
               'state_dict': model.state_dict(),
               'image_datasets' : model.class_to_idx,
+              'arch': model,
               'epochs': epochs,
               'optimizer': optimizer.state_dict(),
+              'learning_rate': learning,
              }
     torch.save(checkpoint, 'checkpoint.pth')
     

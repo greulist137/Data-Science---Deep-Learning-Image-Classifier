@@ -43,7 +43,13 @@ args = vars(ap.parse_args())
 
 # Write a function that loads a checkpoint and rebuilds the model
 def load_checkpoint(filepath):
-    model = torch.load(filepath)
+    checkpoint = torch.load(filepath)
+    model = checkpoint['arch']
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    epochs = checkpoint['epochs']
+    learning_rate = checkpoint['learning_rate']
+    model.class_to_idx = checkpoint['image_datasets']
     return model
 
 model = load_checkpoint(args['checkpoint'])
@@ -94,39 +100,41 @@ def imshow(np_image, ax=None, title=None):
     return ax
 
     ''' Predict the class (or classes) of an image using a trained deep learning model.'''
-def predict(image_path, model, topk=5):
+def predict(image_path, model, topk=5): 
     model = model
     model.eval()
-    model.to(args['processor'])
+    model.to('cpu')
     model.double()
     img = process_image(image_path)
     img = torch.from_numpy(img)
     img = img.unsqueeze_(0)
     with torch.no_grad():
         output = model.forward(img)
-    pred = torch.exp(output)
-    top_five_probs=pred.topk(topk)[0] 
-    top_five_indices=pred.topk(topk)[1] 
-    top_five_classes = top_five_indices.numpy()
-    return top_five_probs, top_five_classes
+    ps = torch.exp(output)
+    top_ps = ps.topk(topk)
+    probs = top_ps[0]
+    probs = probs[0].numpy()
+    classes = top_ps[1][0].numpy().tolist()
+    class_ids = {key: value for value, key in model.class_to_idx.items()}
+    class_names = [class_ids[i] for i in classes]
+    return probs, class_names
 
 # Display an image along with the top 5 classes
 predictions, classes = predict(args['image'],model)
 
 def convert_to_names(classes, mapping_list):
     names = []
-    for x in classes[0]:
-        print(x)
+    for x in classes:
+        #print(x)
         x = str(x)
         if(x in mapping_list):
-            print(mapping_list[x])
             names.append(mapping_list[x])
     return names
 
 names = convert_to_names(classes, mapping_list)
 
 def show_analysis():
-    plt.bar(names, predictions[0])
+    plt.bar(names, predictions)
     plt.show()
     
 show_analysis()
